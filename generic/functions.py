@@ -1,14 +1,11 @@
 import sqlite3
+import requests
 
 
 # TODO Agregar en BBDD
-    # TODO Nombre restaurant
-    # TODO Comuna
-    # TODO Ubicacion Google o Coordenadas
     # TODO Email destinatario (se informa a moto luego de confirmacion)
     # TODO telefono destinatario (se informa a moto luego de confirmacion)
 
-# TODO implementar funcion clp -> sats
 # TODO implementar funciones lightning ya creadas
 
 def db_init():
@@ -86,3 +83,26 @@ def list_offers():
     ofertas = cursor.fetchall()
     connect.close()
     return ofertas
+
+
+def get_offer(offer_id):
+    connect = sqlite3.connect('users.db')
+    cursor = connect.cursor()
+    cursor.execute(f"SELECT offer_id, pay_amount FROM baseofertas WHERE state = 'active' and offer_id = '{offer_id}'")
+    oferta = cursor.fetchone()
+    connect.close()
+    return oferta
+
+def sats_value(amount):
+    try:
+        res = requests.get('https://api.opennode.co/v1/rates/')
+        btcprice = int(res.json()['data']['BTCCLP']['CLP'])
+        sats_value = int(amount*100000000/btcprice)
+        return sats_value
+    except:
+        try:
+            res = requests.get(f'https://api.yadio.io/convert/{amount}/clp/btc')
+            sats_value = int(res.json()['result']*100000000)
+            return sats_value
+        except:
+            return 0
