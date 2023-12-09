@@ -3,7 +3,6 @@ import sqlite3
 
 # TODO Agregar en BBDD
     # TODO Nombre restaurant
-    # TODO Dia actual
     # TODO Comuna
     # TODO Ubicacion Google o Coordenadas
     # TODO Email destinatario (se informa a moto luego de confirmacion)
@@ -23,6 +22,7 @@ def db_init():
     origin TEXT,
     destination TEXT,
     time_limit TEXT,
+    created_date TEXT,
     hodl_hash TEXT,
     state TEXT
     )""")
@@ -44,7 +44,7 @@ def user_is_new(user_id):
 def add_user(user_id):
     connect = sqlite3.connect('users.db')
     cursor = connect.cursor()
-    cursor.execute(f"INSERT INTO baseofertas VALUES({user_id[0]}, '', '', 0, '', '', '', '', 'user_entry')")
+    cursor.execute(f"INSERT INTO baseofertas VALUES({user_id[0]}, '', '', 0, '', '', '', '', '', 'user_entry')")
     connect.commit()
     connect.close()
 
@@ -60,7 +60,7 @@ def delete_user(user_id):
 def hay_ofertas():
     connect = sqlite3.connect('users.db')
     cursor = connect.cursor()
-    cursor.execute(f"SELECT offer_id, description, pay_amount, origin, destination, time_limit FROM baseofertas WHERE state = 'active'")
+    cursor.execute(f"SELECT offer_id, description, pay_amount, origin, destination, created_date, time_limit FROM baseofertas WHERE state = 'active'")
     ofertas = cursor.fetchall()
     connect.close()
     if len(ofertas) > 0:
@@ -68,13 +68,13 @@ def hay_ofertas():
     else:
         return False
 
-def add_offer(user_id, message_id, offer):
+def add_offer(user_id, message_id, offer, today_date):
     connect = sqlite3.connect('users.db')
     cursor = connect.cursor()
     offer_id = f'{user_id}_{message_id}'
     data = [offer[data] for data in offer]
     cursor.execute(f"""INSERT INTO baseofertas  (user_id, offer_id, description, pay_amount, origin,
-    destination, time_limit, hodl_hash, state) VALUES ({user_id},'{offer_id}','{data[0]}',{data[1]},'{data[2]}','{data[3]}','{data[4]}','','active')""")
+    destination, time_limit, created_date, hodl_hash, state) VALUES ({user_id},'{offer_id}','{data[0]}',{data[1]},'{data[2]}','{data[3]}','{data[4]}','{today_date}','','active')""")
     connect.commit()
     connect.close()
 
@@ -82,7 +82,7 @@ def add_offer(user_id, message_id, offer):
 def list_offers():
     connect = sqlite3.connect('users.db')
     cursor = connect.cursor()
-    cursor.execute(f"SELECT offer_id, description, pay_amount, origin, destination, time_limit FROM baseofertas WHERE state = 'active'")
+    cursor.execute(f"SELECT offer_id, description, pay_amount, origin, destination, created_date, time_limit FROM baseofertas WHERE state = 'active'")
     ofertas = cursor.fetchall()
     connect.close()
     return ofertas

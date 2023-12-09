@@ -5,6 +5,7 @@
 
 
 import telebot
+from datetime import date
 from generic.functions import add_user, user_is_new, db_init, hay_ofertas, add_offer, list_offers
 
 bot = telebot.TeleBot('6539724945:AAHDfDFgiAi3qko_xljwjBGAjXv31FU5_8k')
@@ -37,7 +38,7 @@ def listar_ofertas(message):
             bot.send_message(message.chat.id, 'Estas son las ofertas')
             ofertas = list_offers()
             for oferta in ofertas:
-                bot.send_message(message.chat.id, f"""Oferta: {oferta[0]}\nDescripcion: {oferta[1]}\nMonto: {oferta[2]}\nDesde: {oferta[3]}\nHasta: {oferta[4]}\nHora: {oferta[5]}""")
+                bot.send_message(message.chat.id, f"""Oferta: {oferta[0]}\nDescripcion: {oferta[1]}\nMonto: {oferta[2]}\nDesde: {oferta[3]}\nHasta: {oferta[4]}\nFecha: {oferta[5]}\nHora: {oferta[6]}""")
         else:
             bot.send_message(message.chat.id, 'No hay ofertas disponibles')
 
@@ -49,6 +50,7 @@ def listar_ofertas(message):
         if hay_ofertas():
             bot.send_message(message.chat.id, 'Indicar codigo oferta')
             bot.state = SELECTOFFER
+        else: bot.send_message(message.chat.id, 'No hay ofertas disponibles')
 
 @bot.message_handler(func=lambda msg: bot.state == SELECTOFFER)
 def select_offer(message):
@@ -183,7 +185,8 @@ def confirmar_oferta(message):
             if resp == 'si':
                 bot.send_message(message.chat.id, f'Orden Confirmada y publicada, gracias.')
                 bot.state = None
-                add_offer(message.chat.id, message.id, offer)
+                today_date = date.today().strftime("%Y/%m/%d")
+                add_offer(message.chat.id, message.id, offer, today_date)
                 # print(message.chat.id, message.id, offer)
 
                 # print(offer)
