@@ -8,11 +8,17 @@ import telebot
 from datetime import date
 from generic.functions import add_user, user_is_new, db_init, hay_ofertas
 from generic.functions import add_offer, list_offers, get_offer, sats_value
-from generic.lnbits import get_lnbits_balance, decode_invoice, pay_invoice, check_invoice_pre_image, refill_wallet
-from generic.lnd import lnd_normal_invoice, hodl_invoice_paid, create_hodl_invoice, settle_hodl_invoice, cancel_hodl_invoice
+from generic.lnbits import get_lnbits_balance, decode_invoice
+from generic.lnbits import pay_invoice, check_invoice_pre_image, refill_wallet
+from generic.lnd import lnd_normal_invoice, hodl_invoice_paid, create_hodl_invoice
+from generic.lnd import settle_hodl_invoice, cancel_hodl_invoice
 
 BOT_TOKEN = open('secrets/bot_token.txt', 'r').read()
 bot = telebot.TeleBot(BOT_TOKEN)
+
+# offer_id_1 = '676140835_109'
+# print(get_offer(offer_id_1))
+
 
 bot.state = None
 DESCRIPTION = 1
@@ -53,8 +59,8 @@ def listar_ofertas(message):
 @bot.message_handler(commands=['aceptar'])
 def listar_ofertas(message):
     if message.chat.type == 'private':
-        global offer_id
-        offer_id = ''
+        global offer_data
+        offer_data = {'offer_id': ''}
         if hay_ofertas():
             bot.send_message(message.chat.id, 'Indicar codigo oferta')
             bot.state = SELECTOFFER
@@ -64,34 +70,39 @@ def listar_ofertas(message):
 def select_offer(message):
     if message.chat.type == 'private':
         try:
-            offer_id = str(message.text)
-            offer = get_offer(offer_id)
-            # bot.send_message(message.chat.id, f'{offer}')
-            sats = sats_value(offer[1])
-            bot.send_message(message.chat.id, f'Oferta {offer_id} seleccionada.')
-            bot.send_message(message.chat.id, f'Favor Pegar Invoice por {sats} sats')
+            offer_data['offer_id'] = str(message.text)
+            offer = get_offer(offer_data['offer_id'])
+            offer_sats_value = sats_value(offer[1])
+            bot.send_message(message.chat.id, f'Oferta {offer_data["offer_id"]} seleccionada.')
+            bot.send_message(message.chat.id, f'Favor Pegar Invoice por {offer_sats_value} sats, con expiracion de 24h')
             bot.state = ENTERINVOICE
         except:
-            bot.send_message(message.chat.id, f'Error de ingreso')
-            bot.send_message(message.chat.id, f'Indicar codigo oferta:')
+            bot.send_message(message.chat.id, 'Error de ingreso')
+            bot.send_message(message.chat.id, 'Indicar codigo oferta:')
 
 @bot.message_handler(func=lambda msg: bot.state == ENTERINVOICE)
 def save_invoice(message):
     if message.chat.type == 'private':
-        # offer = get_offer(offer_id) # TODO
-        # sats = sats_value(offer) # TODO
-        sats = 1000
+        offer_value = get_offer(offer_data["offer_id"])[1] # TODO CHECK
+        offer_sats_value = sats_value(offer_value) # TODO CHECK
         try:
-            invoice = str(message.text) # TODO
-            # hash = get_hash(invoice) # TODO
+            invoice = str(message.text) # TODO CHECK
+            invoice_hash, invoice_sats, invoice_exp = decode_invoice(invoice)
+            if abs(int(offer_sats_value) - int(invoice_sats))/int(offer_sats_value) > 0.005:
+                bot.send_message(message.chat.id, 'Error de monto')
+                bot.send_message(message.chat.id, f'Favor Pegar Invoice por {offer_sats_value} sats')
+            elif int(invoice_exp) < 86400:
+                bot.send_message(message.chat.id, 'Error de expiracion. Se necesita expiracion de 24h (86.400 seg)')
+                bot.send_message(message.chat.id, f'Favor Pegar Invoice por {offer_sats_value} sats, con expiracion de 24h')
 
-            bot.send_message(message.chat.id, f'Invoice guardado. Espere confirmacion de oferente')
-            bot.send_message(message.chat.id, f'Cuando oferente confirme, el pago quedara asegurado en la aplicacion')
+            else:
+                bot.send_message(message.chat.id, 'Invoice guardado. Espere confirmacion de oferente')
+                bot.send_message(message.chat.id, 'Cuando oferente confirme, el pago quedara asegurado en la aplicacion')
 
-            bot.state = None
+                bot.state = None
         except:
             bot.send_message(message.chat.id, f'Error de ingreso')
-            bot.send_message(message.chat.id, f'Favor Pegar Invoice por {sats} sats')
+            bot.send_message(message.chat.id, f'Favor Pegar Invoice por {offer_sats_value} sats, con expiracion de 24h')
 
 
 
@@ -190,7 +201,7 @@ def confirmar_oferta(message):
     if message.chat.type == 'private':
         try:
             resp = str(message.text)
-            if resp == 'si':
+            if resp.lower() == 'si':
                 bot.send_message(message.chat.id, f'Orden Confirmada y publicada, gracias.')
                 bot.state = None
                 today_date = date.today().strftime("%Y/%m/%d")

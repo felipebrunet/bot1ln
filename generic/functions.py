@@ -6,7 +6,7 @@ import requests
     # TODO Email destinatario (se informa a moto luego de confirmacion)
     # TODO telefono destinatario (se informa a moto luego de confirmacion)
 
-# TODO implementar funciones lightning ya creadas
+# TODO implementar funciones lightning ya creadas CHECK
 
 def db_init():
     connect = sqlite3.connect('users.db')
