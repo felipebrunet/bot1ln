@@ -1,3 +1,6 @@
 secrets/
 secrets
+venv/
+bot1ln.egg-info/
+bot1ln.egg-info/
 *.db
