@@ -50,7 +50,7 @@ def create_hodl_invoice(payment_hash, amount_sats, expiration):
     return(r.json()['payment_request'])
 
 
-# - LND liquidar hodl invoice TODO ver que retornar
+# - LND liquidar hodl invoice retorna json vacio
 def settle_hodl_invoice(pre_image):
     # pre_image = 'a42e60563717d2ac78656ddd4478fa70bc0721a238bc5a933d431a6d8ebfe501'
     url = 'https://umbrel.local:8080/v2/invoices/settle'

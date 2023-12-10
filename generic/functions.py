@@ -117,6 +117,3 @@ def auto_expire_offers():
     connect.close()
 
 
-    # TODO
-    return
-
