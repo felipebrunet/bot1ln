@@ -8,7 +8,8 @@ import telebot
 from datetime import date
 from generic.functions import add_user, user_is_new, db_init, hay_ofertas
 from generic.functions import add_offer, list_offers, get_offer, sats_value
-
+from generic.lnbits import get_lnbits_balance, decode_invoice, pay_invoice, check_invoice_pre_image, refill_wallet
+from generic.lnd import lnd_normal_invoice, hodl_invoice_paid, create_hodl_invoice, settle_hodl_invoice, cancel_hodl_invoice
 
 BOT_TOKEN = open('secrets/bot_token.txt', 'r').read()
 bot = telebot.TeleBot(BOT_TOKEN)
