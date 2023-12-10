@@ -1,7 +1,7 @@
 import base64, codecs, json, requests
 
-macaroon = open('../secrets/macaroon.txt', 'r').read()
-TLS_PATH = '../secrets/tls.cert'
+macaroon = open('secrets/macaroon.txt', 'r').read()
+TLS_PATH = 'secrets/tls.cert'
 
 # - LND crear invoice normal
 def lnd_normal_invoice(amount_sats):

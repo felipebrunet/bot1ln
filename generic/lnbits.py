@@ -1,10 +1,10 @@
 import requests
 
-url_wallet = open('../secrets/url_wallet.txt', 'r').read()
-wallet_id = open('../secrets/lnbits_wallet_id.txt', 'r').read()
-api_read_key = open('../secrets/api_read_key.txt', 'r').read()
-api_admin_key = open('../secrets/api_admin_key.txt', 'r').read()
-admin_user_id = open('../secrets/user_lnbits_admin.txt', 'r').read()
+url_wallet = open('secrets/url_wallet.txt', 'r').read()
+wallet_id = open('secrets/lnbits_wallet_id.txt', 'r').read()
+api_read_key = open('secrets/api_read_key.txt', 'r').read()
+api_admin_key = open('secrets/api_admin_key.txt', 'r').read()
+admin_user_id = open('secrets/user_lnbits_admin.txt', 'r').read()
 
 # Get balance
 def get_lnbits_balance():
