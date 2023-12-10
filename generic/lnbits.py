@@ -27,13 +27,13 @@ def decode_invoice(invoice):
     return payment_hash, amount, expiration
 
 
-# Pay invoice TODO ver que retornar
+# Pay invoice
 def pay_invoice(invoice):
     api_key = api_admin_key
     url = 'http://umbrel.local:3007/api/v1/payments'
     z = requests.post(url, json = {"out": True, "bolt11": f"{invoice}"}, headers = {"X-Api-Key": f"{api_key}", "Content-type": "application/json"})
     # return z.text
-    print(z.text)
+    print(z.json()['payment_hash'])
 
 
 # Check invoice for Pre image
@@ -47,7 +47,7 @@ def check_invoice_pre_image(payment_hash):
     return pre_image
 
 
-# Refill wallet TODO ver que retornar
+# Refill wallet
 def refill_wallet(amount_sats):
     url = f'http://umbrel.local:3007/admin/api/v1/topup/?usr={admin_user_id}'
     v = requests.put(url, json = {"id": f"{wallet_id}", "amount" : f"{amount_sats}"}, headers = {"Content-type": "application/json"})

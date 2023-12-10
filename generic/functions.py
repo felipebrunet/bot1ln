@@ -101,11 +101,22 @@ def sats_value(amount):
         except:
             return 0
 
-def expire_offers(offer_id):
-    # TODO
+def expire_offer(user_id ,offer_id):
+    connect = sqlite3.connect('users.db')
+    cursor = connect.cursor()
+    cursor.execute(f"UPDATE baseofertas SET state = 'inactive' WHERE user_id = '{user_id}' and offer_id = '{offer_id}';")
+    connect.commit()
+    connect.close()
     return
 
 def auto_expire_offers():
+    connect = sqlite3.connect('users.db')
+    cursor = connect.cursor()
+    cursor.execute(f"UPDATE baseofertas SET state = 'inactive' WHERE created_date < CURRENT_DATE;")
+    connect.commit()
+    connect.close()
+
+
     # TODO
     return
 

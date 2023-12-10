@@ -1,15 +1,13 @@
 
-# TODO correr rutina para expirar ofertas vencidas al usar bot
-# TODO implementar fn para expirar oferta propia a eleccion
-
 # TODO implementar notificacion y cobro a oferente GRANDE
 # TODO implementar notificacion email a destinatario GRANDE
 
 
 import telebot
 from datetime import date
+from time import sleep
 from generic.functions import add_user, user_is_new, db_init, hay_ofertas
-from generic.functions import add_offer, list_offers, get_offer, sats_value, expire_offers, auto_expire_offers
+from generic.functions import add_offer, list_offers, get_offer, sats_value, expire_offer, auto_expire_offers
 from generic.lnbits import get_lnbits_balance, decode_invoice
 from generic.lnbits import pay_invoice, check_invoice_pre_image, refill_wallet
 from generic.lnd import lnd_normal_invoice, hodl_invoice_paid, create_hodl_invoice
@@ -18,9 +16,46 @@ from generic.lnd import settle_hodl_invoice, cancel_hodl_invoice
 BOT_TOKEN = open('secrets/bot_token.txt', 'r').read()
 bot = telebot.TeleBot(BOT_TOKEN)
 
-# offer_id_1 = '676140835_109'
-# print(get_offer(offer_id_1))
-
+settlear_invoice = False
+invoice_moto = 'lntb31u1pjhvjf8pp5cpn7kj0qq26q9sxdcfuwt7890ggzq00ctkzk5a7m2nzph8wgw9dsdqqcqzzsxqyz5vqsp58tmucy9hdnujcjdyjnp83q32nzz8whxaq5hag2zjnk60gqqjm0ts9qyyssqp44tdfjruskz5mu42zpm64fktxnu35j4vwgp73w2wt7kuuzd8edksvazznn8x0y2sv3cmzuzyk8jnqxqczzc728wesvnlv2yft4vfagpuxea7g'
+payment_hash, amount, _ = decode_invoice(invoice_moto)
+# sleep(2)
+# cancel_hodl_invoice(payment_hash)
+print(f'El payment hash del pago moto es {payment_hash}')
+sleep(2)
+print('Creando hodl invoice')
+sleep(2)
+hodl_invoice = create_hodl_invoice(payment_hash, amount, 2000)
+print(f"el hodl invoice es: {hodl_invoice}")
+sleep(2)
+print('wallet externa pagara hodl invoice')
+sleep(2)
+hodl_invoice_pending = True
+while hodl_invoice_pending:
+    sleep(2)
+    status_hodl, _ = hodl_invoice_paid(payment_hash)
+    print(f'El estatus del hodl invoice es {status_hodl}')
+    if status_hodl == 'ACCEPTED':
+        hodl_invoice_pending = False
+sleep(2)
+print('hodl invoice fue aceptado, ahora corresponde pagar invoice moto')
+print('pagando invoice moto')
+pay_invoice(invoice_moto)
+sleep(2)
+print('Ahora que se ha pagado el invoice moto, obtenemos el pre image del invoice pagado')
+sleep(2)
+pre_image = check_invoice_pre_image(payment_hash)
+print(f'Pre imagen es {pre_image}')
+sleep(2)
+if settlear_invoice:
+    print('dado que settlear invoice esta en True, pagamos hodl invoice')
+    settle_hodl_invoice(pre_image)
+    sleep(2)
+else:
+    print('dado que settlear invoice esta en False, anulamos el hodl invoice, devolvemos el monto y perdemos plata')
+    cierre_hodl_invoice = cancel_hodl_invoice(payment_hash)
+    if cierre_hodl_invoice == {}:
+        print('hodl invoice ha sido cancelado')
 
 bot.state = None
 DESCRIPTION = 1
@@ -57,8 +92,11 @@ def listar_ofertas(message):
                 dir_destino = sep.join(oferta[4].replace(',', '').split())
                 recorrido = f"<a href='https://www.google.com/maps/dir/{dir_origen}/{dir_destino}?entry=ttu'>Ver Distancia</a>"
                 bot.send_message(message.chat.id, f"Oferta: {oferta[0]}\nDescripcion: {oferta[1]}\nMonto: ${oferta[2]}\nDesde: {oferta[3]}\nHasta: {oferta[4]}\nFecha: {oferta[5]}\nHora: {oferta[6]}\nVer Distancia: {recorrido}", parse_mode="HTML")
+            # expire_offer(message.chat.id, '676140835_317')
+
         else:
             bot.send_message(message.chat.id, 'No hay ofertas disponibles')
+
 
 @bot.message_handler(commands=['aceptar'])
 def listar_ofertas(message):
@@ -221,7 +259,7 @@ def confirmar_oferta(message):
             if resp.lower() == 'si':
                 bot.send_message(message.chat.id, f'Orden Confirmada y publicada, gracias.')
                 bot.state = None
-                today_date = date.today().strftime("%Y/%m/%d")
+                today_date = date.today().strftime("%Y-%m-%d")
                 add_offer(message.chat.id, message.id, offer, today_date)
                 # print(message.chat.id, message.id, offer)
 
