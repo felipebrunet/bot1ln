@@ -1,13 +1,6 @@
 import sqlite3
 import requests
 
-
-# TODO Agregar en BBDD
-    # TODO Email destinatario (se informa a moto luego de confirmacion)
-    # TODO telefono destinatario (se informa a moto luego de confirmacion)
-
-# TODO implementar funciones lightning ya creadas CHECK
-
 def db_init():
     connect = sqlite3.connect('users.db')
     cursor = connect.cursor()
@@ -20,6 +13,7 @@ def db_init():
     destination TEXT,
     time_limit TEXT,
     created_date TEXT,
+    dest_email TEXT,
     hodl_hash TEXT,
     state TEXT
     )""")
@@ -41,7 +35,7 @@ def user_is_new(user_id):
 def add_user(user_id):
     connect = sqlite3.connect('users.db')
     cursor = connect.cursor()
-    cursor.execute(f"INSERT INTO baseofertas VALUES({user_id[0]}, '', '', 0, '', '', '', '', '', 'user_entry')")
+    cursor.execute(f"INSERT INTO baseofertas VALUES({user_id[0]}, '', '', 0, '', '', '', '', '', '', 'user_entry')")
     connect.commit()
     connect.close()
 
@@ -71,7 +65,7 @@ def add_offer(user_id, message_id, offer, today_date):
     offer_id = f'{user_id}_{message_id}'
     data = [offer[data] for data in offer]
     cursor.execute(f"""INSERT INTO baseofertas  (user_id, offer_id, description, pay_amount, origin,
-    destination, time_limit, created_date, hodl_hash, state) VALUES ({user_id},'{offer_id}','{data[0]}',{data[1]},'{data[2]}','{data[3]}','{data[4]}','{today_date}','','active')""")
+    destination, time_limit, created_date, dest_email, hodl_hash,  state) VALUES ({user_id},'{offer_id}','{data[0]}',{data[1]},'{data[2]}','{data[3]}','{data[4]}','{today_date}','{data[5]}','','active')""")
     connect.commit()
     connect.close()
 
@@ -107,4 +101,11 @@ def sats_value(amount):
         except:
             return 0
 
+def expire_offers(offer_id):
+    # TODO
+    return
+
+def auto_expire_offers():
+    # TODO
+    return
 

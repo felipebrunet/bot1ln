@@ -1,13 +1,15 @@
 
-# TODO correr rutina cada hora para expirar ofertas vencidas
-# TODO implementar notificacion y cobro a oferente
-# TODO implementar notificacion email a destinatario
+# TODO correr rutina para expirar ofertas vencidas al usar bot
+# TODO implementar fn para expirar oferta propia a eleccion
+
+# TODO implementar notificacion y cobro a oferente GRANDE
+# TODO implementar notificacion email a destinatario GRANDE
 
 
 import telebot
 from datetime import date
 from generic.functions import add_user, user_is_new, db_init, hay_ofertas
-from generic.functions import add_offer, list_offers, get_offer, sats_value
+from generic.functions import add_offer, list_offers, get_offer, sats_value, expire_offers, auto_expire_offers
 from generic.lnbits import get_lnbits_balance, decode_invoice
 from generic.lnbits import pay_invoice, check_invoice_pre_image, refill_wallet
 from generic.lnd import lnd_normal_invoice, hodl_invoice_paid, create_hodl_invoice
@@ -26,9 +28,10 @@ AMOUNT = 2
 ORIGIN = 3
 DESTINATION = 4
 LIMIT_TIME = 5
-CONFIRMATION = 6
-SELECTOFFER = 7
-ENTERINVOICE = 8
+DEST_EMAIL = 6
+CONFIRMATION = 7
+SELECTOFFER = 8
+ENTERINVOICE = 9
 
 
 @bot.message_handler(commands=['start'])
@@ -44,6 +47,7 @@ def start(message):
 @bot.message_handler(commands=['ofertas'])
 def listar_ofertas(message):
     if message.chat.type == 'private':
+        auto_expire_offers()
         if hay_ofertas():
             bot.send_message(message.chat.id, 'Estas son las ofertas')
             ofertas = list_offers()
@@ -59,6 +63,7 @@ def listar_ofertas(message):
 @bot.message_handler(commands=['aceptar'])
 def listar_ofertas(message):
     if message.chat.type == 'private':
+        auto_expire_offers()
         global offer_data
         offer_data = {'offer_id': ''}
         if hay_ofertas():
@@ -83,10 +88,10 @@ def select_offer(message):
 @bot.message_handler(func=lambda msg: bot.state == ENTERINVOICE)
 def save_invoice(message):
     if message.chat.type == 'private':
-        offer_value = get_offer(offer_data["offer_id"])[1] # TODO CHECK
-        offer_sats_value = sats_value(offer_value) # TODO CHECK
+        offer_value = get_offer(offer_data["offer_id"])[1]
+        offer_sats_value = sats_value(offer_value)
         try:
-            invoice = str(message.text) # TODO CHECK
+            invoice = str(message.text)
             invoice_hash, invoice_sats, invoice_exp = decode_invoice(invoice)
             if abs(int(offer_sats_value) - int(invoice_sats))/int(offer_sats_value) > 0.005:
                 bot.send_message(message.chat.id, 'Error de monto')
@@ -114,7 +119,7 @@ def save_invoice(message):
 def anunciar_oferta(message):
     if message.chat.type == 'private':
         global offer
-        offer = {'description': '', 'amount': 0, 'origin': '', 'destination': '', 'limit_time': ''}
+        offer = {'description': '', 'amount': 0, 'origin': '', 'destination': '', 'limit_time': '', 'dest_email': ''}
         bot.send_message(message.chat.id, 'Creando Oferta:')
         bot.send_message(message.chat.id, 'Ingrese descripcion (ej. Pedido Claudio restaurant BitpointBurger:')
         bot.state = DESCRIPTION
@@ -186,15 +191,27 @@ def get_tiempo(message):
     if message.chat.type == 'private':
         try:
             limit_time = str(message.text)
-            bot.send_message(message.chat.id, f'Hora de retiro: {limit_time}')
+            bot.send_message(message.chat.id, f'Hora de retiro: {limit_time}\nIngrese email destinatario:')
             offer['limit_time'] = limit_time
-            bot.send_message(message.chat.id, f'Confirmar Orden: (si / no)')
-            bot.send_message(message.chat.id, f'Descripcion: {offer["description"]}\nValor: {offer["amount"]}\nOrigen: {offer["origin"]}\nDestino: {offer["destination"]}\nRetirar a las: {offer["limit_time"]}')
-            bot.state = CONFIRMATION
+            bot.state = DEST_EMAIL
         except:
             bot.send_message(message.chat.id, 'Error de ingreso')
             bot.send_message(message.chat.id, f'Ingrese hora de retiro hoy:')
 
+
+@bot.message_handler(func=lambda msg: bot.state == DEST_EMAIL)
+def get_tiempo(message):
+    if message.chat.type == 'private':
+        try:
+            dest_email = str(message.text)
+            bot.send_message(message.chat.id, f'Email destinatario: {dest_email}')
+            offer['dest_email'] = dest_email
+            bot.send_message(message.chat.id, f'Confirmar Orden: (si / no)')
+            bot.send_message(message.chat.id, f'Descripcion: {offer["description"]}\nValor: {offer["amount"]}\nOrigen: {offer["origin"]}\nDestino: {offer["destination"]}\nRetirar a las: {offer["limit_time"]}\nEmail destinatario: {offer["dest_email"]}')
+            bot.state = CONFIRMATION
+        except:
+            bot.send_message(message.chat.id, 'Error de ingreso')
+            bot.send_message(message.chat.id, f'Ingrese email destinatario:')
 
 @bot.message_handler(func=lambda msg: bot.state == CONFIRMATION)
 def confirmar_oferta(message):
