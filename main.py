@@ -9,7 +9,9 @@ from datetime import date
 from generic.functions import add_user, user_is_new, db_init, hay_ofertas
 from generic.functions import add_offer, list_offers, get_offer, sats_value
 
-bot = telebot.TeleBot('6539724945:AAHDfDFgiAi3qko_xljwjBGAjXv31FU5_8k')
+
+BOT_TOKEN = open('secrets/bot_token.txt', 'r').read()
+bot = telebot.TeleBot(BOT_TOKEN)
 
 bot.state = None
 DESCRIPTION = 1
