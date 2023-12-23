@@ -113,6 +113,7 @@ def auto_expire_offers():
     connect = sqlite3.connect('users.db')
     cursor = connect.cursor()
     cursor.execute(f"UPDATE baseofertas SET state = 'inactive' WHERE created_date < CURRENT_DATE;")
+    cursor.execute(f"UPDATE baseofertas SET hodl_hash = '' WHERE created_date < CURRENT_DATE;")
     connect.commit()
     connect.close()
 
