@@ -131,5 +131,6 @@ def take_offer(payment_hash, offer_id):
     cursor = connect.cursor()
     cursor.execute(f"UPDATE baseofertas SET hodl_hash = '{payment_hash}' WHERE offer_id = '{offer_id}';")
     cursor.execute(f"UPDATE baseofertas SET state = 'taken' WHERE offer_id = '{offer_id}';")
+    connect.commit()
     connect.close()
 

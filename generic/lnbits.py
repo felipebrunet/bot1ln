@@ -32,8 +32,8 @@ def pay_invoice(invoice):
     api_key = api_admin_key
     url = 'http://umbrel.local:3007/api/v1/payments'
     z = requests.post(url, json = {"out": True, "bolt11": f"{invoice}"}, headers = {"X-Api-Key": f"{api_key}", "Content-type": "application/json"})
-    # return z.text
-    print(z.json()['payment_hash'])
+    # print(z.json()['payment_hash'])
+    return z.json()['payment_hash']
 
 
 # Check invoice for Pre image

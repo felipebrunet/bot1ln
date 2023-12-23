@@ -59,7 +59,7 @@ def settle_hodl_invoice(pre_image):
       'preimage': base64.b64encode(bytes.fromhex(pre_image)).decode('utf8'),
     }
     r = requests.post(url, headers=headers, data=json.dumps(data), verify=TLS_PATH)
-    print(f'el return del settling es {r.json()}')
+    # print(f'el return del settling es {r.json()}')
     return(r.json())
 
 
@@ -73,7 +73,7 @@ def cancel_hodl_invoice(payment_hash):
       'payment_hash': base64.b64encode(bytes.fromhex(payment_hash)).decode('utf8'),
     }
     r = requests.post(url, headers=headers, data=json.dumps(data), verify=TLS_PATH)
-    print(r.json())
+    # print(r.json())
     return(r.json())
 
 

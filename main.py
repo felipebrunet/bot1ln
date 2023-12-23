@@ -6,8 +6,9 @@
 import telebot
 from datetime import date
 from time import sleep
-from generic.functions import add_user, user_is_new, db_init, hay_ofertas
-from generic.functions import add_offer, list_offers, get_offer, sats_value, expire_offer, auto_expire_offers
+from generic.functions import (add_user, user_is_new, db_init, hay_ofertas,
+                               add_offer, list_offers, get_offer, sats_value,
+                               expire_offer, auto_expire_offers, take_offer)
 from generic.lnbits import get_lnbits_balance, decode_invoice
 from generic.lnbits import pay_invoice, check_invoice_pre_image, refill_wallet
 from generic.lnd import lnd_normal_invoice, hodl_invoice_paid, create_hodl_invoice
@@ -67,6 +68,8 @@ DEST_EMAIL = 6
 CONFIRMATION = 7
 SELECTOFFER = 8
 ENTERINVOICE = 9
+OFFERTAKEN = 10
+
 
 
 @bot.message_handler(commands=['start'])
@@ -97,6 +100,10 @@ def listar_ofertas(message):
         else:
             bot.send_message(message.chat.id, 'No hay ofertas disponibles')
 
+
+# -----------------------------------------------------------------------------------------
+# RUTINA PARA TOMAR OFERTA
+# -----------------------------------------------------------------------------------------
 
 @bot.message_handler(commands=['aceptar'])
 def listar_ofertas(message):
@@ -139,10 +146,11 @@ def save_invoice(message):
                 bot.send_message(message.chat.id, f'Favor Pegar Invoice por {offer_sats_value} sats, con expiracion de 24h')
 
             else:
+                print(invoice_hash, offer_data)
+                take_offer(invoice_hash, offer_data['offer_id'])
                 bot.send_message(message.chat.id, 'Invoice guardado. Espere confirmacion de oferente')
                 bot.send_message(message.chat.id, 'Cuando oferente confirme, el pago quedara asegurado en la aplicacion')
-
-                bot.state = None
+                bot.state = OFFERTAKEN
         except:
             bot.send_message(message.chat.id, f'Error de ingreso')
             bot.send_message(message.chat.id, f'Favor Pegar Invoice por {offer_sats_value} sats, con expiracion de 24h')
