@@ -116,4 +116,20 @@ def auto_expire_offers():
     connect.commit()
     connect.close()
 
+def offer_is_active(offer_id):
+    connect = sqlite3.connect('users.db')
+    cursor = connect.cursor()
+    cursor.execute(f"SELECT state FROM baseofertas WHERE offer_id = '{offer_id}'")
+    offer_state = cursor.fetchone()
+    if offer_state == 'active':
+        return True
+    else:
+        return False
+
+def take_offer(payment_hash, offer_id):
+    connect = sqlite3.connect('users.db')
+    cursor = connect.cursor()
+    cursor.execute(f"UPDATE baseofertas SET hodl_hash = '{payment_hash}' WHERE offer_id = '{offer_id}';")
+    cursor.execute(f"UPDATE baseofertas SET state = 'taken' WHERE offer_id = '{offer_id}';")
+    connect.close()
 
