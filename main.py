@@ -1,4 +1,3 @@
-
 # TODO implementar notificacion y cobro a oferente GRANDE
 # TODO implementar notificacion email a destinatario GRANDE
 
@@ -9,10 +8,10 @@ from time import sleep
 from generic.functions import (add_user, user_is_new, db_init, hay_ofertas,
                                add_offer, list_offers, get_offer, sats_value,
                                expire_offer, auto_expire_offers, take_offer)
-from generic.lnbits import get_lnbits_balance, decode_invoice
-from generic.lnbits import pay_invoice, check_invoice_pre_image, refill_wallet
-from generic.lnd import lnd_normal_invoice, hodl_invoice_paid, create_hodl_invoice
-from generic.lnd import settle_hodl_invoice, cancel_hodl_invoice
+from generic.lnbits import (get_lnbits_balance, decode_invoice, pay_invoice,
+                            check_invoice_pre_image, refill_wallet)
+from generic.lnd import (lnd_normal_invoice, hodl_invoice_paid, create_hodl_invoice,
+                         settle_hodl_invoice, cancel_hodl_invoice)
 
 BOT_TOKEN = open('secrets/bot_token.txt', 'r').read()
 bot = telebot.TeleBot(BOT_TOKEN)
@@ -71,6 +70,9 @@ ENTERINVOICE = 9
 OFFERTAKEN = 10
 
 
+# -----------------------------------------------------------------------------------------
+# RUTINA PARA INICIAR BOT
+# -----------------------------------------------------------------------------------------
 
 @bot.message_handler(commands=['start'])
 def start(message):
@@ -81,14 +83,14 @@ def start(message):
             add_user(user_id)
             bot.send_message(message.chat.id, 'Usuario se ha creado')
 
-@bot.message_handler(commands=['cancelar'])
-def cancelar(message):
-    if message.chat.type == 'private':
-        bot.send_message(message.chat.id, 'canceled')
-        bot.state = None
+
+# -----------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------
 
 
-
+# -----------------------------------------------------------------------------------------
+# RUTINA PARA REVISAR OFERTAS
+# -----------------------------------------------------------------------------------------
 @bot.message_handler(commands=['ofertas'])
 def listar_ofertas(message):
     if message.chat.type == 'private':
@@ -101,7 +103,9 @@ def listar_ofertas(message):
                 dir_origen = sep.join(oferta[3].replace(',', '').split())
                 dir_destino = sep.join(oferta[4].replace(',', '').split())
                 recorrido = f"<a href='https://www.google.com/maps/dir/{dir_origen}/{dir_destino}?entry=ttu'>Ver Distancia</a>"
-                bot.send_message(message.chat.id, f"Oferta: {oferta[0]}\nDescripcion: {oferta[1]}\nMonto: ${oferta[2]}\nDesde: {oferta[3]}\nHasta: {oferta[4]}\nFecha: {oferta[5]}\nHora: {oferta[6]}\nVer Distancia: {recorrido}", parse_mode="HTML")
+                bot.send_message(message.chat.id,
+                                 f"Oferta: {oferta[0]}\nDescripcion: {oferta[1]}\nMonto: ${oferta[2]}\nDesde: {oferta[3]}\nHasta: {oferta[4]}\nFecha: {oferta[5]}\nHora: {oferta[6]}\nVer Distancia: {recorrido}",
+                                 parse_mode="HTML")
             # expire_offer(message.chat.id, '676140835_317')
 
         else:
@@ -109,9 +113,12 @@ def listar_ofertas(message):
 
 
 # -----------------------------------------------------------------------------------------
-# RUTINA PARA TOMAR OFERTA
 # -----------------------------------------------------------------------------------------
 
+
+# -----------------------------------------------------------------------------------------
+# RUTINA PARA TOMAR OFERTA
+# -----------------------------------------------------------------------------------------
 @bot.message_handler(commands=['aceptar'])
 def listar_ofertas(message):
     if message.chat.type == 'private':
@@ -121,8 +128,9 @@ def listar_ofertas(message):
         if hay_ofertas():
             bot.send_message(message.chat.id, 'Indicar codigo oferta')
             bot.state = SELECTOFFER
-            # print(bot)
-        else: bot.send_message(message.chat.id, 'No hay ofertas disponibles')
+        else:
+            bot.send_message(message.chat.id, 'No hay ofertas disponibles')
+
 
 @bot.message_handler(func=lambda msg: bot.state == SELECTOFFER)
 def select_offer(message):
@@ -138,6 +146,7 @@ def select_offer(message):
             bot.send_message(message.chat.id, 'Error de ingreso')
             bot.send_message(message.chat.id, 'Indicar codigo oferta:')
 
+
 @bot.message_handler(func=lambda msg: bot.state == ENTERINVOICE)
 def save_invoice(message):
     if message.chat.type == 'private':
@@ -146,28 +155,32 @@ def save_invoice(message):
         try:
             invoice = str(message.text)
             invoice_hash, invoice_sats, invoice_exp = decode_invoice(invoice)
-            if abs(int(offer_sats_value) - int(invoice_sats))/int(offer_sats_value) > 0.005:
+            if abs(int(offer_sats_value) - int(invoice_sats)) / int(offer_sats_value) > 0.005:
                 bot.send_message(message.chat.id, 'Error de monto')
                 bot.send_message(message.chat.id, f'Favor Pegar Invoice por {offer_sats_value} sats')
             elif int(invoice_exp) < 86400:
                 bot.send_message(message.chat.id, 'Error de expiracion. Se necesita expiracion de 24h (86.400 seg)')
-                bot.send_message(message.chat.id, f'Favor Pegar Invoice por {offer_sats_value} sats, con expiracion de 24h')
+                bot.send_message(message.chat.id,
+                                 f'Favor Pegar Invoice por {offer_sats_value} sats, con expiracion de 24h')
 
             else:
                 print(invoice_hash, offer_data)
                 take_offer(invoice_hash, offer_data['offer_id'])
                 bot.send_message(message.chat.id, 'Invoice guardado. Espere confirmacion de oferente')
-                bot.send_message(message.chat.id, 'Cuando oferente confirme, el pago quedara asegurado en la aplicacion')
+                bot.send_message(message.chat.id,
+                                 'Cuando oferente confirme, el pago quedara asegurado en la aplicacion')
                 bot.state = OFFERTAKEN
         except:
             bot.send_message(message.chat.id, f'Error de ingreso')
             bot.send_message(message.chat.id, f'Favor Pegar Invoice por {offer_sats_value} sats, con expiracion de 24h')
 
 
+# -----------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------
 
 
 # -----------------------------------------------------------------------------------------
-# RUTINA PARA INGRESAR OFERTA
+# RUTINA PARA CREAR OFERTA
 # -----------------------------------------------------------------------------------------
 @bot.message_handler(commands=['anunciar'])
 def anunciar_oferta(message):
@@ -177,16 +190,13 @@ def anunciar_oferta(message):
         bot.send_message(message.chat.id, 'Creando Oferta:')
         bot.send_message(message.chat.id, 'Ingrese descripcion (ej. Pedido Claudio restaurant BitpointBurger:')
         bot.state = DESCRIPTION
-        # print(bot.state_handlers)
-        # print(bot.message_handlers)
-        # print(bot.update_listener)
-        # print(bot.)
 
 
-
-
-
-
+@bot.message_handler(commands=['cancel'])
+def cancelar(message):
+    if message.chat.type == 'private':
+        bot.send_message(message.chat.id, 'canceled')
+        bot.state = None
 
 
 @bot.message_handler(func=lambda msg: bot.state == DESCRIPTION)
@@ -262,11 +272,13 @@ def get_tiempo(message):
             bot.send_message(message.chat.id, f'Email destinatario: {dest_email}')
             offer['dest_email'] = dest_email
             bot.send_message(message.chat.id, f'Confirmar Orden: (si / no)')
-            bot.send_message(message.chat.id, f'Descripcion: {offer["description"]}\nValor: {offer["amount"]}\nOrigen: {offer["origin"]}\nDestino: {offer["destination"]}\nRetirar a las: {offer["limit_time"]}\nEmail destinatario: {offer["dest_email"]}')
+            bot.send_message(message.chat.id,
+                             f'Descripcion: {offer["description"]}\nValor: {offer["amount"]}\nOrigen: {offer["origin"]}\nDestino: {offer["destination"]}\nRetirar a las: {offer["limit_time"]}\nEmail destinatario: {offer["dest_email"]}')
             bot.state = CONFIRMATION
         except:
             bot.send_message(message.chat.id, 'Error de ingreso')
             bot.send_message(message.chat.id, f'Ingrese email destinatario:')
+
 
 @bot.message_handler(func=lambda msg: bot.state == CONFIRMATION)
 def confirmar_oferta(message):
@@ -292,5 +304,3 @@ def confirmar_oferta(message):
 if __name__ == '__main__':
     print('bot started')
     bot.polling()
-
-

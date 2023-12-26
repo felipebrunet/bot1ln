@@ -1,6 +1,7 @@
 import sqlite3
 import requests
 
+
 def db_init():
     connect = sqlite3.connect('users.db')
     cursor = connect.cursor()
@@ -19,6 +20,7 @@ def db_init():
     )""")
     connect.commit()
     connect.close()
+
 
 def user_is_new(user_id):
     connect = sqlite3.connect('users.db')
@@ -51,13 +53,15 @@ def delete_user(user_id):
 def hay_ofertas():
     connect = sqlite3.connect('users.db')
     cursor = connect.cursor()
-    cursor.execute(f"SELECT offer_id, description, pay_amount, origin, destination, created_date, time_limit FROM baseofertas WHERE state = 'active'")
+    cursor.execute(
+        f"SELECT offer_id, description, pay_amount, origin, destination, created_date, time_limit FROM baseofertas WHERE state = 'active'")
     ofertas = cursor.fetchall()
     connect.close()
     if len(ofertas) > 0:
         return True
     else:
         return False
+
 
 def add_offer(user_id, message_id, offer, today_date):
     connect = sqlite3.connect('users.db')
@@ -73,7 +77,8 @@ def add_offer(user_id, message_id, offer, today_date):
 def list_offers():
     connect = sqlite3.connect('users.db')
     cursor = connect.cursor()
-    cursor.execute(f"SELECT offer_id, description, pay_amount, origin, destination, created_date, time_limit FROM baseofertas WHERE state = 'active'")
+    cursor.execute(
+        f"SELECT offer_id, description, pay_amount, origin, destination, created_date, time_limit FROM baseofertas WHERE state = 'active'")
     ofertas = cursor.fetchall()
     connect.close()
     return ofertas
@@ -87,35 +92,41 @@ def get_offer(offer_id):
     connect.close()
     return oferta
 
+
 def sats_value(amount):
     try:
         res = requests.get('https://api.opennode.co/v1/rates/')
         btcprice = int(res.json()['data']['BTCCLP']['CLP'])
-        sats_value = int(amount*100000000/btcprice)
+        sats_value = int(amount * 100000000 / btcprice)
         return sats_value
     except:
         try:
             res = requests.get(f'https://api.yadio.io/convert/{amount}/clp/btc')
-            sats_value = int(res.json()['result']*100000000)
+            sats_value = int(res.json()['result'] * 100000000)
             return sats_value
         except:
             return 0
 
-def expire_offer(user_id ,offer_id):
+
+def expire_offer(user_id, offer_id):
     connect = sqlite3.connect('users.db')
     cursor = connect.cursor()
-    cursor.execute(f"UPDATE baseofertas SET state = 'inactive' WHERE user_id = '{user_id}' and offer_id = '{offer_id}';")
+    cursor.execute(
+        f"UPDATE baseofertas SET state = 'inactive' WHERE user_id = '{user_id}' and offer_id = '{offer_id}';")
     connect.commit()
     connect.close()
     return
+
 
 def auto_expire_offers():
     connect = sqlite3.connect('users.db')
     cursor = connect.cursor()
     cursor.execute(f"UPDATE baseofertas SET state = 'inactive' WHERE created_date < CURRENT_DATE;")
+    # print('ofertas antiguas eliminadas')
     cursor.execute(f"UPDATE baseofertas SET hodl_hash = '' WHERE created_date < CURRENT_DATE;")
     connect.commit()
     connect.close()
+
 
 def offer_is_active(offer_id):
     connect = sqlite3.connect('users.db')
@@ -127,6 +138,7 @@ def offer_is_active(offer_id):
     else:
         return False
 
+
 def take_offer(payment_hash, offer_id):
     connect = sqlite3.connect('users.db')
     cursor = connect.cursor()
@@ -134,4 +146,3 @@ def take_offer(payment_hash, offer_id):
     cursor.execute(f"UPDATE baseofertas SET state = 'taken' WHERE offer_id = '{offer_id}';")
     connect.commit()
     connect.close()
-
