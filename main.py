@@ -89,6 +89,20 @@ def start(message):
 
 
 # -----------------------------------------------------------------------------------------
+# RUTINA PARA CANCELAR ACCION BOT
+# -----------------------------------------------------------------------------------------
+
+@bot.message_handler(commands=['cancelar'])
+def cancelar(message):
+    if message.chat.type == 'private':
+        bot.send_message(message.chat.id, 'canceled')
+        bot.state = None
+
+
+# -----------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------
+
+# -----------------------------------------------------------------------------------------
 # RUTINA PARA REVISAR OFERTAS
 # -----------------------------------------------------------------------------------------
 @bot.message_handler(commands=['ofertas'])
@@ -190,14 +204,6 @@ def anunciar_oferta(message):
         bot.send_message(message.chat.id, 'Creando Oferta:')
         bot.send_message(message.chat.id, 'Ingrese descripcion (ej. Pedido Claudio restaurant BitpointBurger:')
         bot.state = DESCRIPTION
-
-
-@bot.message_handler(commands=['cancel'])
-def cancelar(message):
-    if message.chat.type == 'private':
-        bot.send_message(message.chat.id, 'canceled')
-        bot.state = None
-
 
 @bot.message_handler(func=lambda msg: bot.state == DESCRIPTION)
 def get_descripcion(message):
