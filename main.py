@@ -81,6 +81,13 @@ def start(message):
             add_user(user_id)
             bot.send_message(message.chat.id, 'Usuario se ha creado')
 
+@bot.message_handler(commands=['cancelar'])
+def cancelar(message):
+    if message.chat.type == 'private':
+        bot.send_message(message.chat.id, 'canceled')
+        bot.state = None
+
+
 
 @bot.message_handler(commands=['ofertas'])
 def listar_ofertas(message):
@@ -114,6 +121,7 @@ def listar_ofertas(message):
         if hay_ofertas():
             bot.send_message(message.chat.id, 'Indicar codigo oferta')
             bot.state = SELECTOFFER
+            # print(bot)
         else: bot.send_message(message.chat.id, 'No hay ofertas disponibles')
 
 @bot.message_handler(func=lambda msg: bot.state == SELECTOFFER)
@@ -169,15 +177,16 @@ def anunciar_oferta(message):
         bot.send_message(message.chat.id, 'Creando Oferta:')
         bot.send_message(message.chat.id, 'Ingrese descripcion (ej. Pedido Claudio restaurant BitpointBurger:')
         bot.state = DESCRIPTION
+        # print(bot.state_handlers)
+        # print(bot.message_handlers)
+        # print(bot.update_listener)
+        # print(bot.)
 
 
 
 
-@bot.message_handler(commands=['cancel'])
-def cancelar(message):
-    if message.chat.type == 'private':
-        bot.send_message(message.chat.id, 'canceled')
-        bot.state = None
+
+
 
 
 @bot.message_handler(func=lambda msg: bot.state == DESCRIPTION)
