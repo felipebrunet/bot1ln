@@ -69,7 +69,7 @@ SELECTOFFER = 8
 ENTERINVOICE = 9
 OFFERTAKEN = 10
 
-
+# print(cancel_hodl_invoice('f136d2dd808b3a35b2e4b49aa4f8d5d61e2c14eecb8bcb0af997ebe1e9da8118'))
 # -----------------------------------------------------------------------------------------
 # RUTINA PARA INICIAR BOT
 # -----------------------------------------------------------------------------------------
@@ -97,6 +97,7 @@ def cancelar(message):
     if message.chat.type == 'private':
         bot.send_message(message.chat.id, 'canceled')
         bot.state = None
+        # bot.send_message(676140835, 'hola')
 
 
 # -----------------------------------------------------------------------------------------
@@ -178,12 +179,33 @@ def save_invoice(message):
                                  f'Favor Pegar Invoice por {offer_sats_value} sats, con expiracion de 24h')
 
             else:
-                print(invoice_hash, offer_data)
+                # print(invoice_hash, offer_data)
                 take_offer(invoice_hash, offer_data['offer_id'])
                 bot.send_message(message.chat.id, 'Invoice guardado. Espere confirmacion de oferente')
                 bot.send_message(message.chat.id,
                                  'Cuando oferente confirme, el pago quedara asegurado en la aplicacion')
-                bot.state = OFFERTAKEN
+                # bot.state = OFFERTAKEN
+                oferta_datos = get_offer(offer_data["offer_id"])
+                oferente_id = oferta_datos[2]
+                description = oferta_datos[3]
+                amount_fiat = oferta_datos[1]
+
+                # Oferta ha sido tomada. Ahora el oferente sera notificado
+                # TODO Modificar tabla BBDD para que se guarde nombre del oferente,
+                # TODO nombre del moto, nombre del destinatario, nota del moto, nota del oferente
+                bot.send_message(oferente_id, f'Hola, Tu oferta de nombre: {description} '
+                                              f'ha sido tomada por Juan')
+                bot.send_message(oferente_id, 'Para concretar el servicio, un '
+                                              'Hold invoice va a custodiar los fondos, '
+                                              f'paga el siguiente invoice por ${amount_fiat}, '
+                                              f'y yo le avisare al delivery para que vaya a buscar el pedido'
+                                              f'a la direccion de origen')
+                hodl_invoice = create_hodl_invoice(invoice_hash, invoice_sats, 86400)
+                bot.send_message(oferente_id, f'Hold invoice: \n{hodl_invoice}')
+                # cancel_hodl_invoice(invoice_hash)
+
+
+
         except:
             bot.send_message(message.chat.id, f'Error de ingreso')
             bot.send_message(message.chat.id, f'Favor Pegar Invoice por {offer_sats_value} sats, con expiracion de 24h')

@@ -87,7 +87,7 @@ def list_offers():
 def get_offer(offer_id):
     connect = sqlite3.connect('users.db')
     cursor = connect.cursor()
-    cursor.execute(f"SELECT offer_id, pay_amount FROM baseofertas WHERE state = 'active' and offer_id = '{offer_id}'")
+    cursor.execute(f"SELECT offer_id, pay_amount, user_id, description, hodl_hash FROM baseofertas WHERE state = 'active' and offer_id = '{offer_id}'")
     oferta = cursor.fetchone()
     connect.close()
     return oferta
@@ -121,9 +121,9 @@ def expire_offer(user_id, offer_id):
 def auto_expire_offers():
     connect = sqlite3.connect('users.db')
     cursor = connect.cursor()
-    cursor.execute(f"UPDATE baseofertas SET state = 'inactive' WHERE created_date < CURRENT_DATE;")
+    cursor.execute(f"UPDATE baseofertas SET state = 'inactive' WHERE created_date < date('now','localtime');")
     # print('ofertas antiguas eliminadas')
-    cursor.execute(f"UPDATE baseofertas SET hodl_hash = '' WHERE created_date < CURRENT_DATE;")
+    cursor.execute(f"UPDATE baseofertas SET hodl_hash = '' WHERE created_date < date('now','localtime');")
     connect.commit()
     connect.close()
 
@@ -143,6 +143,6 @@ def take_offer(payment_hash, offer_id):
     connect = sqlite3.connect('users.db')
     cursor = connect.cursor()
     cursor.execute(f"UPDATE baseofertas SET hodl_hash = '{payment_hash}' WHERE offer_id = '{offer_id}';")
-    cursor.execute(f"UPDATE baseofertas SET state = 'taken' WHERE offer_id = '{offer_id}';")
+    # cursor.execute(f"UPDATE baseofertas SET state = 'taken' WHERE offer_id = '{offer_id}';")
     connect.commit()
     connect.close()
