@@ -1,0 +1,29 @@
+10000 sats oferta
+
+modelo sin competencia de motos
+
+moto 1 (user1) envia invoice. Espera asignacion
+moto 2 (user2) envia invoice. Espera asignacion
+
+Oferente (user3) recibe notificacion de oferta tomada por 2 motos (user1 y user2). Elige una pagando invoice.
+
+Programa avisa a "user2" que oferta ya fue tomada por otro. Moto 2 desiste del viaje.
+Programa avisa a "user1" que ya puede viajar a restoran e iniciar el servicio de reparto.
+
+moto 1 llega. moto 1 avisa a local su username.
+
+Oferente entrega paquete a moto 1.
+
+...
+
+
+Ventajas:
+Motos no compiten. Servicio es eficiente con las motos.
+Restoran elije oferta segun criterios: ubicacion actual, reputacion, etc.
+Desventajas:
+Si moto no llega, se desperdicia todo el servicio.
+
+Posible mejora: Castigar moto que no llegue, con una reserva en hodl invoice por el 30% de la oferta.
+Usar en vez de username un one-time-password.
+
+

@@ -47,6 +47,8 @@ def create_hodl_invoice(payment_hash, amount_sats, expiration):
       'expiry': f'{expiration}',
     }
     r = requests.post(url, headers=headers, data=json.dumps(data), verify=TLS_PATH)
+    # print('funciono hold invoice??')
+    # return(r.json())
     return(r.json()['payment_request'])
 
 

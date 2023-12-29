@@ -1,0 +1,118 @@
+													"Bit Mail" 
+Participantes:
+1. Oferentes: Restaurantes, personas naturales. Necesitan enviar un objeto desde A a B en menos de 24 h.
+2. Motos: Personas que realizan la entrega requerida por los oferentes.
+3. Destinatario: Persona qeu recibe la entrega.
+
+App de delivery sin custodia con bitcoin lightning (ni oferente ni moto mantienen fondos en app).
+App con 0 (cero) comisión. Sólo fees de red en caso de que los haya (max 100 sats aprox.) 
+Intercambio en App sólo ocurrirá si el delivery es realizado satisfactoriamente.
+- Si moto falla (destinatario dice "no ok"), oferente no será cobrado, moto no será remunerado.
+- Si moto cumple (destinatario dice "ok"),  moto será remunerado, oferente será cobrado.
+
+Desglose proceso:
+
+State 0:
+Oferentes publican ofertas de traslados (origen, destino, mercancia, monto ofrecido, correo de destinatario, hora tope pickup). Correo de destinatario es registrado en oferta pero no está visible en oferta.
+
+Motos revisan ofertas de traslados (Origen, destino, mercancia, monto ofrecido, hora tope)
+
+
+State 1:
+Moto acepta oferta. Genera invoice regular 1 (invoice regular) y lo pega en la app.
+App avisa a oferente. App genera invoice 2 (hodl-invoice) con el hash asociado al invoice 1.
+
+
+State 2:
+Moto llega a lugar del Oferente a retirar pedido
+Oferente Paga invoice 2 y dinero queda retenido en app. (App no posee pre-imagen asociada al invoice 2 por lo que no puede cobrar el monto, sólo bloquearlo mientras el invoice no expire).
+App avisa a moto que su dinero esta resguardado y que puede retirar el pedido.
+
+
+State 3: 
+Moto realiza despacho hasta destinatario.
+
+
+State 4: Cuando moto ha entregado el pedido, notifica a la app.
+App notifica a destinatario con un email, que destinatario responde con un click ("recibido ok")
+
+
+State 5: App paga invoice regular 1. Moto termina su participacion
+
+
+State 6: App recibe la "pre-imagen" del invoice 1. App liquida el invoice 2 (el hodl-invoice) y cobra a oferente.
+
+
+Ciclo terminado. 
+
+
+
+
+
+Ejemplo
+
+"Pago delivery pedido de comida urbano por el dia (< 24h de duracion). Servicio con costo 6000 sats (2.000 clp aprox)"
+
+1. Pago desde app a moto
+Invoice 1 (regular invoice) desde moto hacia app por 6000 sats (Para pago desde app a moto).
+Invoice generado por wallet de moto (ej. Wallet of Satoshi. Este invoice expira en 24h por lo que 
+deliveries diarios estan ok)
+
+INVOICE 1: lntb60u1pjkgz5app5esc74utquaux6r6tzu79nrvvpq65kct3dk5g2m6ghcn7qvdvhlzsdqqcqzzsxqyz5vqsp53sz3asl2g5hg50lt5p5avez74tpwzuadnntcs4htxwuglze4w0yq9qyyssqfmstqm5mujlja0ltthysa2l4szkqt5dt8gnaldpzahdrdsygz5ckh8f59ahlwa7hjvjae3j483ztzdg9ce89k3z7zh65gfa3tgagsaspt9txff 
+Dato clave: Invoice payment hash asociado: cc31eaf160e7786d0f4b173c598d8c08354b61716da8856f48be27e031acbfc5
+
+El payment hash es un dato que está dentro del invoice (hay que decodificarlo, pero eso lo hace cualquier programa, como LND o cualquier aplicacion web). No hay riesgo en el conocimiento del hash.
+Comando en App para decodificar (Nodo LND):
+
+./umbrel/scripts/app compose lightning exec lnd lncli -n testnet decodepayreq lntb60u1pjkgz5app5esc74utquaux6r6tzu79nrvvpq65kct3dk5g2m6ghcn7qvdvhlzsdqqcqzzsxqyz5vqsp53sz3asl2g5hg50lt5p5avez74tpwzuadnntcs4htxwuglze4w0yq9qyyssqfmstqm5mujlja0ltthysa2l4szkqt5dt8gnaldpzahdrdsygz5ckh8f59ahlwa7hjvjae3j483ztzdg9ce89k3z7zh65gfa3tgagsaspt9txff
+
+Este invoice no se pagará aún. Solo se pagará cuando el destinatario del envío ha dado su OK.
+
+
+2. Pago desde oferente a app con un "hodl-invoice".
+La App es una aplicacion telegram que a su vez opera por debajo un full node de BTC y BTC lightning con el software LND con canales lightning operativos.
+ 
+Invoice 2 (hodl-invoice) desde app a oferente por 6000 sats (Para pago desde oferente a app)
+Accion clave: hodl-invoice es generado por software LND con el mismo payment hash del invoice 1, que es:
+cc31eaf160e7786d0f4b173c598d8c08354b61716da8856f48be27e031acbfc5
+commando LND:
+./umbrel/scripts/app compose lightning exec lnd lncli -n testnet addholdinvoice cc31eaf160e7786d0f4b173c598d8c08354b61716da8856f48be27e031acbfc5 --memo "pago_delivery" --amt 6000
+
+INVOICE 2: 
+lntb60u1pjkgz62pp5esc74utquaux6r6tzu79nrvvpq65kct3dk5g2m6ghcn7qvdvhlzsdq4wpskwm6lv3jkc6tkv4e8jcqzzsxqyz5vqsp56g7sfsvend6d3zp842f8w4yks66h7zkh0j0jh39kyv5s4unft8qq9qyyssqhlwc4ja0wl9q32p3awv4yj086k2xem2lu9ttmejh4lpy3eawtv7zfnzxer9c2stjrvlhqda0z035x8j2ypkzhkl25tcfhjgdxjv2gtgp0mcw37
+
+Lógicamente, al decodificar el invoice, si bien el pubkey (id del nodo a pagar) es distinto (ya que corresponde al nodo de la app), el payment hash es el mismo que en el invoice 1. 
+
+Luego, el pago del invoice 2 podrá hacerse SI Y SOLO SI el pago del invoice 1 se ha realizado.
+
+Oferente con su wallet (ej. Wallet of Satoshi) paga Invoice 2 hacia la App, pero al ser un hodl-invoice, el monto queda suspendido (porque la App no ha podido revelar la pre-imagen, ya que no la posee), de modo que el monto no es controlado por la app todavía (sigue en custodia del oferente). De hecho si pasa un cierto tiempo sin que se entregue la pre-imagen, el monto volverá al oferente, y la app no podrá evitarlo.
+
+Sólo cuando el moto ha entregado el encargo, y sólo si el destinatario ha recibido el encargo dando un OK, entonces
+la app pagará el Invoice 1.
+
+Comando para pagar invoice 1.
+./umbrel/scripts/app compose lightning exec lnd lncli -n testnet payinvoice lntb60u1pjkgz5app5esc74utquaux6r6tzu79nrvvpq65kct3dk5g2m6ghcn7qvdvhlzsdqqcqzzsxqyz5vqsp53sz3asl2g5hg50lt5p5avez74tpwzuadnntcs4htxwuglze4w0yq9qyyssqfmstqm5mujlja0ltthysa2l4szkqt5dt8gnaldpzahdrdsygz5ckh8f59ahlwa7hjvjae3j483ztzdg9ce89k3z7zh65gfa3tgagsaspt9txff
+
+Pago a Moto se realizará. Moto ha terminado su participación.
+
+Al hacer el pago a la moto, la wallet del moto (ej Wallet of Satoshi) devolverá a la App la pre-imagen asociada al payment hash (dato relevante: la "pre-imagen" es el número primitivo cuyo hash es el "payment hash")
+
+La pre imagen es el siguiente número ("número" que está codificado en hexadecimal)
+b1347f7b8f1636726b03122a38bacae34ceaaa74353f089a76fb8caac4e7779c
+
+Finalmente, la app hará el cobro al oferente, liquidando el invoice y recibiendo los fondos. Esto se hace con el siguiente comando:
+
+./umbrel/scripts/app compose lightning exec lnd lncli -n testnet settleinvoice b1347f7b8f1636726b03122a38bacae34ceaaa74353f089a76fb8caac4e7779c
+
+La wallet del oferente (ej. Wallet of Satoshi) ya verá que el pago está hecho, y el monto se ha descontado de su saldo.
+
+Fin.
+
+
+crear hash desde pre image
+ej: si la pre image es 13598656f10fa962b75f6c4587a61a067c14c1ef7dc9ca3703da76bae4c1beb1, 
+entonces el payment hash asociado va a ser:
+
+echo "13598656f10fa962b75f6c4587a61a067c14c1ef7dc9ca3703da76bae4c1beb1" | xxd -r -p | sha256sum
+
+

@@ -16,6 +16,12 @@ from generic.lnd import (lnd_normal_invoice, hodl_invoice_paid, create_hodl_invo
 BOT_TOKEN = open('secrets/bot_token.txt', 'r').read()
 bot = telebot.TeleBot(BOT_TOKEN)
 
+# invoice = 'lntb40u1pjc725mpp522pn096wna9xakdcz45j4cqtzjpcvqr9qt65mxgt20dnknvxxmdqdqqcqzzsxqyz5vqsp5nxt6reqn0surruzlcprr6cgyng8zr44q03vxkxzc69rhjsmzm5ys9qyyssqwdaaugvrrmm5ppm5vp4gzqgfwwsa0rnztsayudy0hl45d0asf7xnzsuan6jagsmvnmkvtdfp592kd8mp8uqjx74u8wh4gwnzx9euhpcpvuky7g'
+# invoice_hash, invoice_sats, invoice_exp = decode_invoice(invoice)
+# print(invoice_hash,'\n', invoice_exp,'\n', invoice_sats)
+# sleep(3)
+# print(create_hodl_invoice(invoice_hash, invoice_sats, invoice_exp))
+
 # settlear_invoice = False
 # invoice_moto = 'lntb31u1pjhvjf8pp5cpn7kj0qq26q9sxdcfuwt7890ggzq00ctkzk5a7m2nzph8wgw9dsdqqcqzzsxqyz5vqsp58tmucy9hdnujcjdyjnp83q32nzz8whxaq5hag2zjnk60gqqjm0ts9qyyssqp44tdfjruskz5mu42zpm64fktxnu35j4vwgp73w2wt7kuuzd8edksvazznn8x0y2sv3cmzuzyk8jnqxqczzc728wesvnlv2yft4vfagpuxea7g'
 # payment_hash, amount, _ = decode_invoice(invoice_moto)
@@ -202,12 +208,15 @@ def save_invoice(message):
                                               f'a la direccion de origen. El pago va a quedar bloqueado '
                                               f'solo se va a descontar de tu saldo cuando la entrega'
                                               f'haya sido confirmada por el destinatario.')
-                hodl_invoice = create_hodl_invoice(invoice_hash, invoice_sats, 86400)
+                sleep(2)
+                hodl_invoice = create_hodl_invoice(invoice_hash, offer_sats_value, invoice_exp)
                 bot.send_message(oferente_id, f'Hold invoice a pagar: \n{hodl_invoice}')
                 # Esperar a que el oferente haga el pago
-                time.sleep(3)
+                sleep(3)
                 bot.send_message(oferente_id, f'He esperado 3 segundos')
-                # cancel_hodl_invoice(invoice_hash)
+                sleep(20)
+                cancel_hodl_invoice(invoice_hash)
+                bot.send_message(oferente_id, f'Invoice ha sido cancelado')
 
 
 

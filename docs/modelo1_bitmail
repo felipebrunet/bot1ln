@@ -1,0 +1,34 @@
+10000 sats oferta
+
+modelo con competencia pura entre motos.
+
+moto 1 (user1) envia invoice y viaja a retirar
+moto 2 (user2) envia invoice y viaja a retirar
+
+Oferente (user3) recibe notificacion de oferta tomada por 2 motos (user1 y user2). Espera que vengan motos.
+
+Programa tiene 2 invoices, debe elegir 1 invoice para generar el hodl invoice para oferente.
+Muestra a oferente ofertas tomadas, debe elegir sólo una.
+
+moto 1 llega primero (user1). moto 1 avisa a local su username.
+
+Oferente elije oferta 1 de "user1", se crea invoice de hodl y oferente lo paga.
+
+Programa avisa a "user2" que oferta ya fue tomada por otro. Moto 2 desperdicia el viaje.
+Programa avisa a "user1" que ya puede hacer el servicio de reparto.
+
+Oferente entrega paquete a moto 1.
+...
+
+
+Ventajas:
+Motos compiten. Servicio es más expedito. Restaurant no puede elegir, ya que asigna a quien llegue primero.
+Desventajas:
+Moto perdedora pierde tiempo.
+
+Posible mejora
+Mapa muestre a motos ubicacion de todas las demas motos participantes
+Usar en vez de username un one-time-password.
+
+
+Si no hay competencia, servicio es simple y satisfactorio.
