@@ -1,6 +1,6 @@
 # TODO implementar notificacion y cobro a oferente GRANDE
 # TODO implementar notificacion email a destinatario GRANDE
-
+import time
 
 import telebot
 from datetime import date
@@ -198,10 +198,15 @@ def save_invoice(message):
                 bot.send_message(oferente_id, 'Para concretar el servicio, un '
                                               'Hold invoice va a custodiar los fondos, '
                                               f'paga el siguiente invoice por ${amount_fiat}, '
-                                              f'y yo le avisare al delivery para que vaya a buscar el pedido'
-                                              f'a la direccion de origen')
+                                              f'para que el delivery vaya a buscar el pedido'
+                                              f'a la direccion de origen. El pago va a quedar bloqueado '
+                                              f'solo se va a descontar de tu saldo cuando la entrega'
+                                              f'haya sido confirmada por el destinatario.')
                 hodl_invoice = create_hodl_invoice(invoice_hash, invoice_sats, 86400)
-                bot.send_message(oferente_id, f'Hold invoice: \n{hodl_invoice}')
+                bot.send_message(oferente_id, f'Hold invoice a pagar: \n{hodl_invoice}')
+                # Esperar a que el oferente haga el pago
+                time.sleep(3)
+                bot.send_message(oferente_id, f'He esperado 3 segundos')
                 # cancel_hodl_invoice(invoice_hash)
 
 
